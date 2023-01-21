@@ -1,7 +1,10 @@
 # gomicollector
 gomicollector is a toy garbage collector.
 
-
+## How to use
+```
+$ git clone 
+```
 
 ## Ref.
 

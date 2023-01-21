@@ -1,5 +1,3 @@
-use std::ops::Index;
-
 use gc::Heap;
 
 fn main() {
@@ -13,8 +11,11 @@ fn main() {
     println!("obj1: {:?}", obj1);
 
     for i in 0..(heap_size) {
-        let tmp = heap.allocate(format!("tmp{}",i));
-        println!("free list after tmp{:?} allocated: {:?}",i, &heap.free_list);
+        let tmp = heap.allocate(format!("tmp{}", i));
+        println!(
+            "free list after tmp{:?} allocated: {:?}",
+            i, &heap.free_list
+        );
         assert_ne!(obj1_id, tmp);
     }
 
@@ -24,8 +25,11 @@ fn main() {
     println!("obj2: {:?}", obj2);
 
     for i in 0..(heap_size) {
-        let _ = heap.allocate(format!("tmp{}",i));
-        println!("free list after tmp{:?} allocated : {:?}",i, &heap.free_list);
+        let _ = heap.allocate(format!("tmp{}", i));
+        println!(
+            "free list after tmp{:?} allocated : {:?}",
+            i, &heap.free_list
+        );
     }
 
     let obj3_id = heap.allocate("Obj3".to_string());
@@ -35,8 +39,11 @@ fn main() {
     heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 
     for i in 0..(heap_size) {
-        let _ = heap.allocate(format!("tmp{}",i));
-        println!("free list after tmp{:?} allocated : {:?}",i, &heap.free_list);
+        let _ = heap.allocate(format!("tmp{}", i));
+        println!(
+            "free list after tmp{:?} allocated : {:?}",
+            i, &heap.free_list
+        );
     }
     // ojb1 and obj3 is still in the heap because the root points to it.
     println!("heap: {:#?}", heap);

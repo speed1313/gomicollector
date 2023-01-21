@@ -28,10 +28,10 @@ impl<T> Object<T> {
 // Heap has a vector of objects. the elements is either None or Some(Object)
 #[derive(Debug, Clone)]
 pub struct Heap<T> {
-    pub heap: Vec<Object<T>>,    // heap is a vector of objects
-    pub root: Option<usize>, // root of the heap
-    size: usize,             // size of the heap
-    pub free_list: Vec<usize>,   // free list contains the objects that are unreachable
+    pub heap: Vec<Object<T>>,  // heap is a vector of objects
+    pub root: Option<usize>,   // root of the heap
+    size: usize,               // size of the heap
+    pub free_list: Vec<usize>, // free list contains the objects that are unreachable
 }
 
 impl<T> Heap<T> {
@@ -128,11 +128,11 @@ mod tests {
     fn test_can_allocate_twice() {
         let heap_size = 10;
         let mut heap = Heap::<String>::new(heap_size);
-        let obj1 = heap.allocate();
+        let obj1 = heap.allocate("obj1".to_string());
         assert!(obj1.is_some());
         let obj1_id = obj1.unwrap();
         heap.root = Some(obj1_id);
-        let obj2 = heap.allocate();
+        let obj2 = heap.allocate("obj2".to_string());
         assert!(obj2.is_some());
         assert_ne!(obj1_id, obj2.unwrap());
         dbg!(heap);
@@ -141,11 +141,11 @@ mod tests {
     fn test_root_is_not_recycled() {
         let heap_size = 10;
         let mut heap = Heap::<String>::new(heap_size);
-        heap.root = heap.allocate();
+        heap.root = heap.allocate("root".to_string());
         assert!(heap.root.clone().is_some());
 
         for _ in 0..(heap_size * 2) {
-            let tmp = heap.allocate();
+            let tmp = heap.allocate("tmp".to_string());
             assert_ne!(heap.root, tmp);
         }
         dbg!(heap);
@@ -157,7 +157,7 @@ mod tests {
         let mut heap = Heap::<String>::new(heap_size);
         for _ in 0..heap_size {
             let root_id = heap.root.clone();
-            let obj = heap.allocate();
+            let obj = heap.allocate("tmp".to_string());
             assert!(obj.is_some());
             match obj {
                 Some(obj) => {
@@ -172,7 +172,7 @@ mod tests {
         }
         dbg!(heap.clone());
         for _ in 0..4 {
-            let obj = heap.allocate();
+            let obj = heap.allocate("tmp".to_string());
             assert!(dbg!(obj).is_none());
         }
         dbg!(heap);
@@ -184,7 +184,7 @@ mod tests {
         let mut heap = Heap::<String>::new(heap_size);
         for _ in 0..(heap_size - 1) {
             let root_id = heap.root.clone();
-            let obj = heap.allocate();
+            let obj = heap.allocate("tmp".to_string());
             assert!(obj.is_some());
             match obj {
                 Some(obj) => {
@@ -197,45 +197,44 @@ mod tests {
                 }
             }
         }
-        let last = heap.allocate();
+        let last = heap.allocate("last".to_string());
         assert!(last.is_some());
         for _ in 0..10 {
-            let tmp = heap.allocate();
+            let tmp = heap.allocate("tmp".to_string());
             assert_eq!(tmp, last);
         }
     }
 
     // force heap to be full using only root object
     // while heap is not full, allocating new object which points to root object
-    fn force_gc<T>(heap: &mut Heap<T>) {
+    fn force_gc(heap: &mut Heap<String>) {
         let origin_root = heap.root;
-        let heap_size = 10;
         // force heap to be full using only root object
-        while let Some(mut obj) = heap.allocate() {
+        while let Some(obj) = heap.allocate("tmp".to_string()) {
             heap.heap[obj].set_head(heap.root);
             heap.root = Some(obj);
         }
         heap.root = origin_root;
-        heap.allocate();
+        heap.allocate("tmp".to_string());
     }
 
     #[test]
     fn test_reachable_objects_not_collected() {
         let heap_size = 10;
         let mut heap = Heap::<String>::new(heap_size);
-        let obj1 = heap.allocate();
+        let obj1 = heap.allocate("obj1".to_string());
         assert!(obj1.is_some());
         heap.root = obj1;
-        let obj2 = heap.allocate();
+        let obj2 = heap.allocate("obj2".to_string());
         assert!(obj2.is_some());
         heap.heap[heap.root.unwrap()].set_head(Some(obj2.unwrap()));
-        let obj3 = heap.allocate();
+        let obj3 = heap.allocate("obj3".to_string());
         assert!(obj3.is_some());
         heap.heap[heap.root.unwrap()].set_tail(Some(obj3.unwrap()));
-        let obj4 = heap.allocate();
+        let obj4 = heap.allocate("obj4".to_string());
         let root_head = heap.heap[heap.root.unwrap()].head;
         heap.heap[root_head.unwrap()].set_head(Some(obj4.unwrap()));
-        let obj5 = heap.allocate();
+        let obj5 = heap.allocate("obj5".to_string());
         heap.heap[root_head.unwrap()].set_tail(Some(obj5.unwrap()));
         dbg!(&heap);
         force_gc(&mut heap);
