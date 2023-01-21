@@ -1,25 +1,26 @@
 # gomicollector
-gomicollector is a toy garbage collector.
-gomicollector's gc algorithm is mark and sweep algorithm.
+gomicollector is a simple mark-sweep garbage collector in Rust.
+
+gomicollector collects garbage when the heap is full.
 
 Since pointer operation is difficult in Rust, I implemented a gomicollector by thinking of the heap as a vector of object and the pointer as the index of the vector.
 
 
 ## How to use
 1. Initialize a heap.
-```
+```Rust
 let mut heap = Heap::<String>::new(4);
-```
+```Rust
 2. Allocate an object to the heap. when you call heap.allocate(), gc collects usable memory with mark and sweep algorithm.
-```
+```Rust
 let obj1_id = heap.allocate("Obj1".to_string());
 ```
 3 Set the root object to point to the obj1
-```
+```Rust
 heap.root = obj1_id;
 ```
 4. Set the head of obj1 to point to obj3
-```
+```Rust
 let obj3_id = heap.allocate("Obj3".to_string());
 heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 ```
