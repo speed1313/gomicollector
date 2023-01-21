@@ -3,6 +3,7 @@
 ///
 ///
 
+/// Object in the heap
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Object<T> {
     head: Option<usize>,
@@ -13,13 +14,15 @@ pub struct Object<T> {
 }
 
 impl<T> Object<T> {
+    /// set head to point to another object
     pub fn set_head(&mut self, head: Option<usize>) {
         self.head = head;
     }
+    /// set tail to point to another object
     pub fn set_tail(&mut self, tail: Option<usize>) {
         self.tail = tail;
     }
-
+    /// get the id, or the address of the heap
     pub fn get_id(&self) -> usize {
         self.id
     }
@@ -54,9 +57,11 @@ impl<T> Heap<T> {
         }
     }
 
+    /// get the object at the given id
     pub fn get(&self, id: usize) -> &Object<T> {
         &self.heap[id]
     }
+    /// add unreachable object to the free list
     fn add_to_free_list(&mut self, id: usize) {
         self.free_list.push(id);
     }
@@ -88,6 +93,7 @@ impl<T> Heap<T> {
         }
     }
 
+    /// allocate a new object to the heap if there is space
     pub fn allocate(&mut self, data: T) -> Option<usize> {
         if self.free_list.is_empty() {
             // out of memory, do GC
@@ -109,7 +115,6 @@ impl<T> Heap<T> {
                 return None; // still out of memory
             }
         }
-        //println!("free list: {:?}", &self.free_list);
         let p = self.free_list.pop();
         match p {
             Some(p) => {
