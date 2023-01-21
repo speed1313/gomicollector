@@ -1,59 +1,86 @@
-#[derive(Debug,Clone, PartialEq, Eq)]
-struct Object {
-    head: Option<Box<Object>>,
-    tail : Option<Box<Object>>,
+/// GomiCollector
+/// A simple mark and sweep garbage collector
+///
+///
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Object<T> {
+    head: Option<usize>,
+    tail: Option<usize>,
     marked: bool,
+    id: usize,
+    data: Option<T>,
 }
 
-impl Object{
-    pub fn new(heap: &mut Heap,head : Option<Box<Object>>, tail: Option<Box<Object>>) -> Object{
-        let obj = heap.allocate();
-        assert!(obj.is_some());
-        Object{
-            head: head,
-            tail: tail,
-            marked: false,
-        }
-    }
-    pub fn set_head(&mut self, head: Option<Box<Object>>){
+impl<T> Object<T> {
+    pub fn set_head(&mut self, head: Option<usize>) {
         self.head = head;
     }
-    pub fn set_tail(&mut self, tail: Option<Box<Object>>){
+    pub fn set_tail(&mut self, tail: Option<usize>) {
         self.tail = tail;
     }
+
+    pub fn get_id(&self) -> usize {
+        self.id
+    }
 }
 
+// Heap has a vector of objects. the elements is either None or Some(Object)
 #[derive(Debug, Clone)]
-struct Heap{
-    heap: Vec<Object>, // heap is a vector of objects
-    root: Option<Box<Object>>, // root of the heap
-    size: usize, // size of the heap
-    free_list: Vec<Object>, // free list contains the objects that are unreachable
+pub struct Heap<T> {
+    pub heap: Vec<Object<T>>,    // heap is a vector of objects
+    pub root: Option<usize>, // root of the heap
+    size: usize,             // size of the heap
+    pub free_list: Vec<usize>,   // free list contains the objects that are unreachable
 }
 
-impl Heap{
-    pub fn new(heap_size: usize) -> Heap{
-        Heap{
-            heap: vec!(Object { head: None, tail: None, marked: false }; heap_size),
+impl<T> Heap<T> {
+    pub fn new(heap_size: usize) -> Heap<T> {
+        let mut heap = vec![];
+        for i in 0..heap_size {
+            heap.push(Object {
+                head: None,
+                tail: None,
+                marked: false,
+                id: i,
+                data: None,
+            });
+        }
+        Heap {
+            heap: heap,
             root: None,
             size: heap_size,
-            free_list: vec!(),
+            free_list: vec![],
         }
     }
-    fn add_to_free_list(&mut self, p: & Object){
-        self.free_list.push(p.clone());
+
+    pub fn get(&self, id: usize) -> &Object<T> {
+        &self.heap[id]
+    }
+    fn add_to_free_list(&mut self, id: usize) {
+        self.free_list.push(id);
     }
 
     // mark all reachable objects recursively
-    fn mark(&self, p: &mut Option<Box<Object>>){
+    fn mark(&mut self, p: &mut Option<usize>) {
         match p {
             Some(p) => {
-                if p.marked {
+                if self.heap[*p].marked {
                     return;
                 }
-                p.marked = true;
-                self.mark(&mut p.head);
-                self.mark(&mut p.tail);
+                self.heap[*p].marked = true;
+                match self.heap[*p].head {
+                    Some(head) => {
+                        self.mark(&mut Some(head));
+                    }
+                    None => {}
+                }
+                match self.heap[*p].tail {
+                    Some(tail) => {
+                        self.mark(&mut Some(tail));
+                    }
+                    None => {}
+                }
             }
             None => {
                 return;
@@ -61,36 +88,35 @@ impl Heap{
         }
     }
 
-    fn allocate(&mut self) -> Option<Box<Object>>{
-        if self.free_list.is_empty(){ // out of memory, do GC
+    pub fn allocate(&mut self, data: T) -> Option<usize> {
+        if self.free_list.is_empty() {
+            // out of memory, do GC
+            println!("mark and sweep");
             // 1. clear mark bits
-            for i in 0..self.size{
+            for i in 0..self.size {
                 self.heap[i].marked = false;
             }
             // 2. mark phase
             self.mark(&mut self.root.clone());
-
-             // 3. sweep phase
-            self.free_list = vec!();
-            for i in 0..self.size{
-                if !self.heap[i].marked{
-                    self.add_to_free_list(&self.heap[i].clone());
+            // 3. sweep phase
+            self.free_list = vec![];
+            for i in 0..self.size {
+                if !self.heap[i].marked {
+                    self.add_to_free_list(i);
                 }
             }
-            if self.free_list.is_empty(){
+            if self.free_list.is_empty() {
                 return None; // still out of memory
             }
         }
+        //println!("free list: {:?}", &self.free_list);
         let p = self.free_list.pop();
         match p {
-            Some(mut p) => {
-                p.head = None;
-                p.tail = None;
-                return Some(Box::new(p));
+            Some(p) => {
+                self.heap[p].data = Some(data);
+                Some(p)
             }
-            None => {
-                return None;
-            }
+            None => None,
         }
     }
 }
@@ -99,46 +125,132 @@ impl Heap{
 mod tests {
     use super::*;
     #[test]
-    fn test_can_allocate_twice(){
-        let heap_size = 10000;
-        let mut heap = Heap::new(heap_size);
+    fn test_can_allocate_twice() {
+        let heap_size = 10;
+        let mut heap = Heap::<String>::new(heap_size);
         let obj1 = heap.allocate();
         assert!(obj1.is_some());
-        heap.root = obj1.clone();
+        let obj1_id = obj1.unwrap();
+        heap.root = Some(obj1_id);
         let obj2 = heap.allocate();
         assert!(obj2.is_some());
-        assert!(std::ptr::eq(&obj1, &obj2) == false);
+        assert_ne!(obj1_id, obj2.unwrap());
+        dbg!(heap);
     }
     #[test]
     fn test_root_is_not_recycled() {
-        let heap_size = 10000;
-        let mut heap = Heap::new(heap_size);
+        let heap_size = 10;
+        let mut heap = Heap::<String>::new(heap_size);
         heap.root = heap.allocate();
         assert!(heap.root.clone().is_some());
 
-        for _ in 0..(heap_size*2) {
+        for _ in 0..(heap_size * 2) {
             let tmp = heap.allocate();
-            assert!(std::ptr::eq(&heap.root, &tmp) == false);
+            assert_ne!(heap.root, tmp);
         }
+        dbg!(heap);
     }
 
     #[test]
     fn test_full_heap() {
         let heap_size = 10;
-        let mut heap = Heap::new(heap_size);
+        let mut heap = Heap::<String>::new(heap_size);
         for _ in 0..heap_size {
-            let mut obj = heap.allocate();
+            let root_id = heap.root.clone();
+            let obj = heap.allocate();
             assert!(obj.is_some());
-            obj.as_mut().expect("").set_head(None);
-            obj.as_mut().expect("obj is none").set_tail(heap.root);
-            heap.root = obj;
+            match obj {
+                Some(obj) => {
+                    heap.heap[obj].set_head(None);
+                    heap.heap[obj].set_tail(root_id);
+                    heap.root = Some(obj);
+                }
+                None => {
+                    assert!(false);
+                }
+            }
         }
         dbg!(heap.clone());
-        for _ in 0..4{
+        for _ in 0..4 {
             let obj = heap.allocate();
-            dbg!(heap.clone());
-            assert!(obj.is_none());
+            assert!(dbg!(obj).is_none());
+        }
+        dbg!(heap);
+    }
+
+    #[test]
+    fn test_nearly_full_heap() {
+        let heap_size = 10;
+        let mut heap = Heap::<String>::new(heap_size);
+        for _ in 0..(heap_size - 1) {
+            let root_id = heap.root.clone();
+            let obj = heap.allocate();
+            assert!(obj.is_some());
+            match obj {
+                Some(obj) => {
+                    heap.heap[obj].set_head(None);
+                    heap.heap[obj].set_tail(root_id);
+                    heap.root = Some(obj);
+                }
+                None => {
+                    assert!(false);
+                }
+            }
+        }
+        let last = heap.allocate();
+        assert!(last.is_some());
+        for _ in 0..10 {
+            let tmp = heap.allocate();
+            assert_eq!(tmp, last);
         }
     }
 
+    // force heap to be full using only root object
+    // while heap is not full, allocating new object which points to root object
+    fn force_gc<T>(heap: &mut Heap<T>) {
+        let origin_root = heap.root;
+        let heap_size = 10;
+        // force heap to be full using only root object
+        while let Some(mut obj) = heap.allocate() {
+            heap.heap[obj].set_head(heap.root);
+            heap.root = Some(obj);
+        }
+        heap.root = origin_root;
+        heap.allocate();
+    }
+
+    #[test]
+    fn test_reachable_objects_not_collected() {
+        let heap_size = 10;
+        let mut heap = Heap::<String>::new(heap_size);
+        let obj1 = heap.allocate();
+        assert!(obj1.is_some());
+        heap.root = obj1;
+        let obj2 = heap.allocate();
+        assert!(obj2.is_some());
+        heap.heap[heap.root.unwrap()].set_head(Some(obj2.unwrap()));
+        let obj3 = heap.allocate();
+        assert!(obj3.is_some());
+        heap.heap[heap.root.unwrap()].set_tail(Some(obj3.unwrap()));
+        let obj4 = heap.allocate();
+        let root_head = heap.heap[heap.root.unwrap()].head;
+        heap.heap[root_head.unwrap()].set_head(Some(obj4.unwrap()));
+        let obj5 = heap.allocate();
+        heap.heap[root_head.unwrap()].set_tail(Some(obj5.unwrap()));
+        dbg!(&heap);
+        force_gc(&mut heap);
+        assert_eq!(heap.root.unwrap(), obj1.unwrap());
+        let root_id = heap.root.unwrap();
+        assert_eq!(heap.heap[root_id].head.unwrap(), obj2.unwrap());
+        assert_eq!(heap.heap[root_id].tail.unwrap(), obj3.unwrap());
+        assert_eq!(
+            heap.heap[heap.heap[root_id].head.unwrap()].head.unwrap(),
+            obj4.unwrap()
+        );
+        assert_eq!(
+            heap.heap[heap.heap[root_id].head.unwrap()].tail.unwrap(),
+            obj5.unwrap()
+        );
+        dbg!(heap);
+    }
 }
