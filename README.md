@@ -26,9 +26,9 @@ heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 ```
 
 ###  example
-root->obj1->obj3
-
-obj2
+- Situation:
+  - root->obj1->obj3 (reachable)
+  - obj2 (unreachable or garbage, so it will be collected)
 
 ```
 $ git clone https://github.com/speed1313/gomicollector.git
