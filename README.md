@@ -11,7 +11,7 @@ Since pointer operation is difficult in Rust, I implemented a gomicollector by t
 ```Rust
 let mut heap = Heap::<String>::new(4);
 ```
-2. Allocate an object to the heap. when you call heap.allocate(), gc collects usable memory with mark and sweep algorithm.
+2. Allocate an object to the heap. when you call heap.allocate(), gc collects garabage if the heap is full and return allocated memory address.
 ```Rust
 let obj1_id = heap.allocate("Obj1".to_string());
 ```
