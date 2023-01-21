@@ -6,19 +6,19 @@ Since pointer operation is difficult in Rust, I implemented a gomicollector by t
 
 
 ## How to use
-1. initialize a heap.
+1. Initialize a heap.
 ```
 let mut heap = Heap::<String>::new(4);
 ```
-2. allocate an object to the heap. when you call heap.allocate(), gc collects usable memory with mark and sweep algorithm.
+2. Allocate an object to the heap. when you call heap.allocate(), gc collects usable memory with mark and sweep algorithm.
 ```
 let obj1_id = heap.allocate("Obj1".to_string());
 ```
-3 set the root object to point to the obj1
+3 Set the root object to point to the obj1
 ```
 heap.root = obj1_id;
 ```
-- set the head of obj1 to point to obj3
+4. Set the head of obj1 to point to obj3
 ```
 let obj3_id = heap.allocate("Obj3".to_string());
 heap.heap[obj1_id.unwrap()].set_head(obj3_id);
@@ -26,6 +26,7 @@ heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 
 ###  example
 root->obj1->obj3
+
 obj2
 
 ```
