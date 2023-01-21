@@ -24,6 +24,10 @@ let obj3_id = heap.allocate("Obj3".to_string());
 heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 ```
 
+###  example
+root->obj1->obj3
+obj2
+
 ```
 $ git clone https://github.com/speed1313/gomicollector.git
 $ cd gomicollector
