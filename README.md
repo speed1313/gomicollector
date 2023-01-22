@@ -107,6 +107,11 @@ heap: Heap {
 }
 ```
 
+## TODO
+- [ ] allow allocated object to change its data, not via heap object.
+- [ ] simulate stack machine with gomicollector
+
+
 ## Ref.
 
 - https://github.com/munificent/mark-sweep

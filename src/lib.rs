@@ -70,28 +70,19 @@ impl<T> Heap<T> {
 
     /// mark all reachable objects recursively
     fn mark(&mut self, p: &mut Option<usize>) {
-        match p {
-            Some(p) => {
-                if self.heap[*p].marked {
-                    return;
-                }
-                self.heap[*p].marked = true;
-                match self.heap[*p].head {
-                    Some(head) => {
-                        self.mark(&mut Some(head));
-                    }
-                    None => {}
-                }
-                match self.heap[*p].tail {
-                    Some(tail) => {
-                        self.mark(&mut Some(tail));
-                    }
-                    None => {}
-                }
-            }
-            None => {
+        if let Some(p) = p {
+            if self.heap[*p].marked {
                 return;
             }
+            self.heap[*p].marked = true;
+            if let Some(head) =  self.heap[*p].head {
+                self.mark(&mut Some(head));
+            }
+            if let Some(tail) =  self.heap[*p].tail {
+                self.mark(&mut Some(tail));
+            }
+        }else{
+            return;
         }
     }
 
