@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 /// GomiCollector
 /// A simple mark and sweep garbage collector
 ///
@@ -5,7 +7,7 @@
 
 /// Object in the heap
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Object<T> {
+pub struct Object<T: Debug + Clone>{
     head: Option<usize>,
     tail: Option<usize>,
     marked: bool,
@@ -13,7 +15,7 @@ pub struct Object<T> {
     data: Option<T>,
 }
 
-impl<T> Object<T> {
+impl<T:Debug + Clone> Object<T>{
     /// set head to point to another object
     pub fn set_head(&mut self, head: Option<usize>) {
         self.head = head;
@@ -33,14 +35,14 @@ impl<T> Object<T> {
 
 /// Heap has a vector of objects. the elements is either None or Some(Object)
 #[derive(Debug, Clone)]
-pub struct Heap<T> {
+pub struct Heap<T:Debug + Clone> {
     pub heap: Vec<Object<T>>,  // heap is a vector of objects
     pub root: Option<usize>,   // root of the heap
     size: usize,               // size of the heap
     pub free_list: Vec<usize>, // free list contains the objects that are unreachable
 }
 
-impl<T> Heap<T> {
+impl<T:Debug + Clone> Heap<T> {
     pub fn new(heap_size: usize) -> Heap<T> {
         let heap = (0..heap_size)
             .map(|i| Object {
@@ -101,6 +103,9 @@ impl<T> Heap<T> {
             self.free_list = vec![];
             for i in 0..self.size {
                 if !self.heap[i].marked {
+                    if self.heap[i].data.is_some() {
+                        println!("droped {:#?}", self.heap[i].data.clone().unwrap());
+                    }
                     self.add_to_free_list(i);
                 }
             }

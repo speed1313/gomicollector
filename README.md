@@ -34,30 +34,37 @@ heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 $ git clone https://github.com/speed1313/gomicollector.git
 $ cd gomicollector
 $ cargo run
-free list: []
 mark and sweep
-free list after obj1 allocated: [0, 1, 2]
-obj1: Object { head: None, tail: None, marked: false, id: 3, data: Some("Obj1") }
-free list after tmp0 allocated: [0, 1]
-free list after tmp1 allocated: [0]
-free list after tmp2 allocated: []
+obj1 allocated Object { head: None, tail: None, marked: false, id: 3, data: Some("Obj1") }
+tmp0 will be allocated
+tmp1 will be allocated
+tmp2 will be allocated
+tmp3 will be allocated
 mark and sweep
-free list after tmp3 allocated: [0, 1]
-free list after obj2 allocated: [0]
-obj2: Object { head: None, tail: None, marked: false, id: 1, data: Some("Obj2") }
-free list after tmp0 allocated : []
+droped "tmp2"
+droped "tmp1"
+droped "tmp0"
+obj2 allocated: Object { head: None, tail: None, marked: false, id: 1, data: Some("Obj2") }
+tmp0 will be allocated
+tmp1 will be allocated
 mark and sweep
-free list after tmp1 allocated : [0, 1]
-free list after tmp2 allocated : [0]
-free list after tmp3 allocated : []
+droped "tmp0"
+droped "Obj2"
+droped "tmp3"
+tmp2 will be allocated
+tmp3 will be allocated
 mark and sweep
-free list after obj3 allocated: [0, 1]
-obj3: Object { head: None, tail: None, marked: false, id: 2, data: Some("Obj3") }
-free list after tmp0 allocated : [0]
-free list after tmp1 allocated : []
+droped "tmp3"
+droped "tmp2"
+droped "tmp1"
+obj3 allocated: Object { head: None, tail: None, marked: false, id: 2, data: Some("Obj3") }
+tmp0 will be allocated
+tmp1 will be allocated
+tmp2 will be allocated
 mark and sweep
-free list after tmp2 allocated : [0]
-free list after tmp3 allocated : []
+droped "tmp1"
+droped "tmp0"
+tmp3 will be allocated
 heap: Heap {
     heap: [
         Object {
@@ -95,7 +102,7 @@ heap: Heap {
             marked: true,
             id: 3,
             data: Some(
-                "Obj1",
+                "changed data",
             ),
         },
     ],
