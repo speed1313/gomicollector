@@ -1,14 +1,13 @@
-use gc::Heap;
+use gomicollector::Heap;
 
 fn main() {
     let heap_size = 4;
-    // initialize a heap
     let mut heap = Heap::<String>::new(heap_size);
     println!("free list: {:?}", &heap.free_list);
     // allocate an object
     let obj1_id = heap.allocate("Obj1".to_string());
     println!("free list after obj1 allocated: {:?}", &heap.free_list);
-    // set the root to point to obj1
+    // root -> obj1
     heap.root = obj1_id;
     let obj1 = heap.get(obj1_id.unwrap());
     println!("obj1: {:?}", obj1);
@@ -38,15 +37,14 @@ fn main() {
         );
     }
 
-    // allocate obj3 which is reachable from the root set
-    // because obj1 points to obj3
+    // root -> obj1 -> obj3
     let obj3_id = heap.allocate("Obj3".to_string());
     println!("free list after obj3 allocated: {:?}", &heap.free_list);
     let obj3 = heap.get(obj3_id.unwrap());
     println!("obj3: {:?}", obj3);
     heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 
-    // allocate a lot of objects and check gc doesnt collect obj3 memory
+    // allocate a lot of objects and check gc does not collect obj3 memory
     for i in 0..(heap_size) {
         let _ = heap.allocate(format!("tmp{}", i));
         println!(
@@ -54,7 +52,7 @@ fn main() {
             i, &heap.free_list
         );
     }
-    
+
     // ojb1 and obj3 is still in the heap because the root points to it.
     println!("heap: {:#?}", heap);
 }

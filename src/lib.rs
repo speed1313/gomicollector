@@ -28,7 +28,7 @@ impl<T> Object<T> {
     }
 }
 
-// Heap has a vector of objects. the elements is either None or Some(Object)
+/// Heap has a vector of objects. the elements is either None or Some(Object)
 #[derive(Debug, Clone)]
 pub struct Heap<T> {
     pub heap: Vec<Object<T>>,  // heap is a vector of objects
@@ -39,16 +39,15 @@ pub struct Heap<T> {
 
 impl<T> Heap<T> {
     pub fn new(heap_size: usize) -> Heap<T> {
-        let mut heap = vec![];
-        for i in 0..heap_size {
-            heap.push(Object {
+        let heap = (0..heap_size)
+            .map(|i| Object {
                 head: None,
                 tail: None,
                 marked: false,
                 id: i,
                 data: None,
-            });
-        }
+            })
+            .collect::<Vec<_>>();
         Heap {
             heap: heap,
             root: None,
@@ -66,7 +65,7 @@ impl<T> Heap<T> {
         self.free_list.push(id);
     }
 
-    // mark all reachable objects recursively
+    /// mark all reachable objects recursively
     fn mark(&mut self, p: &mut Option<usize>) {
         match p {
             Some(p) => {
