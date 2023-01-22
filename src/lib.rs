@@ -1,5 +1,10 @@
-use std::fmt::Debug;
-
+use rccell::RcCell;
+use std::{
+    borrow::BorrowMut,
+    cell::{Ref, RefMut},
+    fmt::Debug,
+    rc::Rc,
+};
 /// GomiCollector
 /// A simple mark and sweep garbage collector
 ///
@@ -7,7 +12,7 @@ use std::fmt::Debug;
 
 /// Object in the heap
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Object<T: Debug + Clone>{
+pub struct Object<T: Debug + Clone> {
     head: Option<usize>,
     tail: Option<usize>,
     marked: bool,
@@ -15,7 +20,7 @@ pub struct Object<T: Debug + Clone>{
     data: Option<T>,
 }
 
-impl<T:Debug + Clone> Object<T>{
+impl<T: Debug + Clone> Object<T> {
     /// set head to point to another object
     pub fn set_head(&mut self, head: Option<usize>) {
         self.head = head;
@@ -35,22 +40,24 @@ impl<T:Debug + Clone> Object<T>{
 
 /// Heap has a vector of objects. the elements is either None or Some(Object)
 #[derive(Debug, Clone)]
-pub struct Heap<T:Debug + Clone> {
-    pub heap: Vec<Object<T>>,  // heap is a vector of objects
-    pub root: Option<usize>,   // root of the heap
-    size: usize,               // size of the heap
-    pub free_list: Vec<usize>, // free list contains the objects that are unreachable
+pub struct Heap<T: Debug + Clone> {
+    pub heap: Vec<RcCell<Object<T>>>, // heap is a vector of objects
+    pub root: Option<usize>,          // root of the heap
+    size: usize,                      // size of the heap
+    pub free_list: Vec<usize>,        // free list contains the objects that are unreachable
 }
 
-impl<T:Debug + Clone> Heap<T> {
+impl<T: Debug + Clone> Heap<T> {
     pub fn new(heap_size: usize) -> Heap<T> {
         let heap = (0..heap_size)
-            .map(|i| Object {
-                head: None,
-                tail: None,
-                marked: false,
-                id: i,
-                data: None,
+            .map(|i| {
+                RcCell::new(Object {
+                    head: None,
+                    tail: None,
+                    marked: false,
+                    id: i,
+                    data: None,
+                })
             })
             .collect::<Vec<_>>();
         Heap {
@@ -62,8 +69,9 @@ impl<T:Debug + Clone> Heap<T> {
     }
 
     /// get the object at the given id
-    pub fn get(&self, id: usize) -> &Object<T> {
-        &self.heap[id]
+    pub fn get(&self, id: usize) -> RefMut<Object<T>> {
+        // return the object at the given id without borrowing self
+        self.heap[id].borrow_mut()
     }
     /// add unreachable object to the free list
     fn add_to_free_list(&mut self, id: usize) {
@@ -71,19 +79,18 @@ impl<T:Debug + Clone> Heap<T> {
     }
 
     /// mark all reachable objects recursively
-    fn mark(&mut self, p: &mut Option<usize>) {
+    fn mark(&mut self, p: &Option<usize>) {
         if let Some(p) = p {
-            if self.heap[*p].marked {
+            if self.heap[*p].borrow().marked {
                 return;
             }
-            self.heap[*p].marked = true;
-            if let Some(head) =  self.heap[*p].head {
-                self.mark(&mut Some(head));
-            }
-            if let Some(tail) =  self.heap[*p].tail {
-                self.mark(&mut Some(tail));
-            }
-        }else{
+            self.heap[*p].borrow_mut().marked = true;
+            //if let Some( head) =   {
+            let head = &self.heap[*p].borrow().head.clone();
+            self.mark(head);
+            let tail = &self.heap[*p].borrow().tail.clone();
+            self.mark(tail);
+        } else {
             return;
         }
     }
@@ -95,16 +102,16 @@ impl<T:Debug + Clone> Heap<T> {
             println!("mark and sweep");
             // 1. clear mark bits
             for i in 0..self.size {
-                self.heap[i].marked = false;
+                self.heap[i].borrow_mut().marked = false;
             }
             // 2. mark phase
             self.mark(&mut self.root.clone());
             // 3. sweep phase
             self.free_list = vec![];
             for i in 0..self.size {
-                if !self.heap[i].marked {
-                    if self.heap[i].data.is_some() {
-                        println!("droped {:#?}", self.heap[i].data.clone().unwrap());
+                if !self.heap[i].borrow().marked {
+                    if self.heap[i].borrow().data.is_some() {
+                        println!("droped {:#?}", self.heap[i].borrow().data.clone().unwrap());
                     }
                     self.add_to_free_list(i);
                 }
@@ -116,7 +123,7 @@ impl<T:Debug + Clone> Heap<T> {
         let p = self.free_list.pop();
         match p {
             Some(p) => {
-                self.heap[p].data = Some(data);
+                self.heap[p].borrow_mut().data = Some(data);
                 Some(p)
             }
             None => None,
@@ -138,7 +145,7 @@ mod tests {
         let obj2 = heap.allocate("obj2".to_string());
         assert!(obj2.is_some());
         assert_ne!(obj1_id, obj2.unwrap());
-        dbg!(heap);
+        //dbg!(heap);
     }
     #[test]
     fn test_root_is_not_recycled() {
@@ -151,7 +158,7 @@ mod tests {
             let tmp = heap.allocate("tmp".to_string());
             assert_ne!(heap.root, tmp);
         }
-        dbg!(heap);
+        //dbg!(heap);
     }
 
     #[test]
@@ -164,8 +171,8 @@ mod tests {
             assert!(obj.is_some());
             match obj {
                 Some(obj) => {
-                    heap.heap[obj].set_head(None);
-                    heap.heap[obj].set_tail(root_id);
+                    heap.heap[obj].borrow_mut().set_head(None);
+                    heap.heap[obj].borrow_mut().set_tail(root_id);
                     heap.root = Some(obj);
                 }
                 None => {
@@ -191,8 +198,8 @@ mod tests {
             assert!(obj.is_some());
             match obj {
                 Some(obj) => {
-                    heap.heap[obj].set_head(None);
-                    heap.heap[obj].set_tail(root_id);
+                    heap.heap[obj].borrow_mut().set_head(None);
+                    heap.heap[obj].borrow_mut().set_tail(root_id);
                     heap.root = Some(obj);
                 }
                 None => {
@@ -214,7 +221,7 @@ mod tests {
         let origin_root = heap.root;
         // force heap to be full using only root object
         while let Some(obj) = heap.allocate("tmp".to_string()) {
-            heap.heap[obj].set_head(heap.root);
+            heap.heap[obj].borrow_mut().set_head(heap.root);
             heap.root = Some(obj);
         }
         heap.root = origin_root;
@@ -230,27 +237,41 @@ mod tests {
         heap.root = obj1;
         let obj2 = heap.allocate("obj2".to_string());
         assert!(obj2.is_some());
-        heap.heap[heap.root.unwrap()].set_head(Some(obj2.unwrap()));
+        heap.heap[heap.root.unwrap()]
+            .borrow_mut()
+            .set_head(Some(obj2.unwrap()));
         let obj3 = heap.allocate("obj3".to_string());
         assert!(obj3.is_some());
-        heap.heap[heap.root.unwrap()].set_tail(Some(obj3.unwrap()));
+        heap.heap[heap.root.unwrap()]
+            .borrow_mut()
+            .set_tail(Some(obj3.unwrap()));
         let obj4 = heap.allocate("obj4".to_string());
-        let root_head = heap.heap[heap.root.unwrap()].head;
-        heap.heap[root_head.unwrap()].set_head(Some(obj4.unwrap()));
+        let root_head = heap.heap[heap.root.unwrap()].borrow().head;
+        heap.heap[root_head.unwrap()]
+            .borrow_mut()
+            .set_head(Some(obj4.unwrap()));
         let obj5 = heap.allocate("obj5".to_string());
-        heap.heap[root_head.unwrap()].set_tail(Some(obj5.unwrap()));
+        heap.heap[root_head.unwrap()]
+            .borrow_mut()
+            .set_tail(Some(obj5.unwrap()));
         dbg!(&heap);
         force_gc(&mut heap);
         assert_eq!(heap.root.unwrap(), obj1.unwrap());
         let root_id = heap.root.unwrap();
-        assert_eq!(heap.heap[root_id].head.unwrap(), obj2.unwrap());
-        assert_eq!(heap.heap[root_id].tail.unwrap(), obj3.unwrap());
+        assert_eq!(heap.heap[root_id].borrow().head.unwrap(), obj2.unwrap());
+        assert_eq!(heap.heap[root_id].borrow().tail.unwrap(), obj3.unwrap());
         assert_eq!(
-            heap.heap[heap.heap[root_id].head.unwrap()].head.unwrap(),
+            heap.heap[heap.heap[root_id].borrow().head.unwrap()]
+                .borrow()
+                .head
+                .unwrap(),
             obj4.unwrap()
         );
         assert_eq!(
-            heap.heap[heap.heap[root_id].head.unwrap()].tail.unwrap(),
+            heap.heap[heap.heap[root_id].borrow().head.unwrap()]
+                .borrow()
+                .tail
+                .unwrap(),
             obj5.unwrap()
         );
         dbg!(heap);

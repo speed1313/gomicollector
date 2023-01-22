@@ -5,3 +5,12 @@ version = 3
 [[package]]
 name = "gomicollector"
 version = "0.1.0"
+dependencies = [
+ "rccell",
+]
+
+[[package]]
+name = "rccell"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "421ca964f8500e3f087cae77d0f90eb32d1da3a2d213962d1f1c7bc318b4bdf6"
