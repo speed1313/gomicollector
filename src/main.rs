@@ -43,7 +43,6 @@ fn main() {
     let obj3 = heap.get(obj3_id.unwrap());
     println!("obj3: {:?}", obj3);
     heap.heap[obj1_id.unwrap()].set_head(obj3_id);
-
     // allocate a lot of objects and check gc does not collect obj3 memory
     for i in 0..(heap_size) {
         let _ = heap.allocate(format!("tmp{}", i));
@@ -52,6 +51,7 @@ fn main() {
             i, &heap.free_list
         );
     }
+    heap.heap[obj1_id.unwrap()].set_data("changed data".to_string());
 
     // ojb1 and obj3 is still in the heap because the root points to it.
     println!("heap: {:#?}", heap);

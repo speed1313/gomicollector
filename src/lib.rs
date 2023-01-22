@@ -26,6 +26,9 @@ impl<T> Object<T> {
     pub fn get_id(&self) -> usize {
         self.id
     }
+    pub fn set_data(&mut self, data: T) {
+        self.data = Some(data);
+    }
 }
 
 /// Heap has a vector of objects. the elements is either None or Some(Object)
