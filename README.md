@@ -11,21 +11,29 @@ Since pointer operation is difficult in Rust, I implemented a gomicollector by t
 ```Rust
 let mut heap = Heap::<String>::new(4);
 ```
+
 2. Allocate an object to the heap. when you call heap.allocate(), gc collects garabage if the heap is full and return allocated memory address.
 ```Rust
 let obj1_id = heap.allocate("Obj1".to_string());
 ```
-3 Set the root object to point to the obj1
+
+3. Set the root object to point to the obj1
 ```Rust
 heap.root = obj1_id;
 ```
+
 4. Set the head of obj1 to point to obj3
 ```Rust
 let obj3_id = heap.allocate("Obj3".to_string());
 heap.heap[obj1_id.unwrap()].set_head(obj3_id);
 ```
 
-###  example
+5. change the object data
+```Rust
+heap.heap[obj1_id.unwrap()].set_data("changed data".to_string());
+```
+
+###  Example
 - Situation:
   - root->obj1->obj3 (reachable)
   - obj2 (unreachable or garbage, so it will be collected)
