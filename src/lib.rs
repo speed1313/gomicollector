@@ -65,6 +65,9 @@ impl<T: Debug + Clone> Heap<T> {
     pub fn get(&self, id: usize) -> &Object<T> {
         &self.heap[id]
     }
+    pub fn get_data(&self, id: usize) -> &T {
+        self.heap[id].data.as_ref().unwrap()
+    }
     /// add unreachable object to the free list
     fn add_to_free_list(&mut self, id: usize) {
         self.free_list.push(id);
@@ -139,6 +142,45 @@ impl<T: Debug + Clone> Heap<T> {
         self.root_set.insert(origin_root);
 
         self.allocate(tmp_data);
+    }
+
+    /// collect all reachable objects from the root set
+    pub fn reachable_set(&mut self) -> HashSet<usize> {
+        let mut reachable_set = HashSet::new();
+        for i in 0..self.size {
+            self.heap[i].marked = false;
+        }
+        for id in self.root_set.clone().iter() {
+            reachable_set.insert(*id);
+            reachable_set = reachable_set
+                .union(&self.collect_reachable_set(*id))
+                .map(|x| *x)
+                .collect();
+        }
+        reachable_set
+    }
+    // collect all reachable objects from the given object
+    fn collect_reachable_set(&mut self, id: usize) -> HashSet<usize> {
+        let mut reachable_set = HashSet::new();
+        if self.heap[id].marked {
+            return reachable_set;
+        }
+        self.heap[id].marked = true;
+        if let Some(head) = self.heap[id].head {
+            reachable_set.insert(head);
+            reachable_set = reachable_set
+                .union(&self.collect_reachable_set(head))
+                .map(|x| *x)
+                .collect();
+        }
+        if let Some(tail) = self.heap[id].tail {
+            reachable_set.insert(tail);
+            reachable_set = reachable_set
+                .union(&self.collect_reachable_set(tail))
+                .map(|x| *x)
+                .collect();
+        }
+        reachable_set
     }
 }
 
