@@ -8,8 +8,7 @@ fn main() {
     let obj1 = heap.get(obj1_id.unwrap());
     println!("obj1 allocated {:?}", obj1);
     // root -> obj1
-    heap.root = obj1_id;
-
+    heap.root_set.insert(obj1_id.unwrap());
 
     // allocate a lot of objects to check gc works well
     for i in 0..(heap_size) {
