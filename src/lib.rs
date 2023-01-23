@@ -122,6 +122,19 @@ impl<T:Debug + Clone> Heap<T> {
             None => None,
         }
     }
+
+    /// force heap to be full using only root object
+    /// while heap is not full, allocating new object which points to root object
+    fn force_gc(&mut self, data: T) {
+        let origin_root = self.root;
+        // force heap to be full using only root object
+        while let Some(obj) = self.allocate(data.clone()) {
+            self.heap[obj].set_head(self.root);
+            self.root = Some(obj);
+        }
+        self.root = origin_root;
+        self.allocate(data);
+    }
 }
 
 #[cfg(test)]
@@ -208,18 +221,7 @@ mod tests {
         }
     }
 
-    // force heap to be full using only root object
-    // while heap is not full, allocating new object which points to root object
-    fn force_gc(heap: &mut Heap<String>) {
-        let origin_root = heap.root;
-        // force heap to be full using only root object
-        while let Some(obj) = heap.allocate("tmp".to_string()) {
-            heap.heap[obj].set_head(heap.root);
-            heap.root = Some(obj);
-        }
-        heap.root = origin_root;
-        heap.allocate("tmp".to_string());
-    }
+
 
     #[test]
     fn test_reachable_objects_not_collected() {
@@ -240,7 +242,7 @@ mod tests {
         let obj5 = heap.allocate("obj5".to_string());
         heap.heap[root_head.unwrap()].set_tail(Some(obj5.unwrap()));
         dbg!(&heap);
-        force_gc(&mut heap);
+        heap.force_gc("tmp".to_string());
         assert_eq!(heap.root.unwrap(), obj1.unwrap());
         let root_id = heap.root.unwrap();
         assert_eq!(heap.heap[root_id].head.unwrap(), obj2.unwrap());
