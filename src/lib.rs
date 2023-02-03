@@ -1,9 +1,8 @@
+//! GomiCollector
+//!
+//! A simple mark and sweep garbage collector
+//!
 use std::{collections::HashSet, fmt::Debug};
-
-/// GomiCollector
-/// A simple mark and sweep garbage collector
-///
-///
 
 /// Object in the heap
 #[derive(Debug, Clone, PartialEq, Eq)]
