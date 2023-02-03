@@ -147,6 +147,7 @@ impl<T: Debug + Clone> Heap<T> {
     /// collect all reachable objects from the root set
     pub fn reachable_set(&mut self) -> HashSet<usize> {
         let mut reachable_set = HashSet::new();
+        // clear mark bits
         for i in 0..self.size {
             self.heap[i].marked = false;
         }
