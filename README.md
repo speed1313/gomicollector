@@ -19,7 +19,7 @@ let obj1_id = heap.allocate("Obj1".to_string());
 
 3. Set the root object to point to the obj1
 ```Rust
-heap.root = obj1_id;
+heap.root_set.insert(obj1_id.unwrap());
 ```
 
 4. Set the head of obj1 to point to obj3
