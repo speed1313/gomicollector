@@ -1,4 +1,6 @@
 # gomicollector
+[![Crates.io](https://img.shields.io/crates/v/gomicollector)](https://crates.io/crates/gomicollector)
+
 gomicollector is a simple mark-sweep garbage collector in Rust.
 
 gomicollector collects garbage when the heap is full.
