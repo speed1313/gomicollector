@@ -126,7 +126,7 @@ impl<T: Debug + Clone> Heap<T> {
 
     /// force heap to be full using only root object while heap is not full, allocating new object which points to root object.
     /// tmp_data is just a tmp data to force gc.
-    fn force_gc(&mut self, tmp_data: T) {
+    fn _force_gc(&mut self, tmp_data: T) {
         let origin_root = *self.root_set.iter().next().unwrap();
         let mut tmp_root = origin_root;
         // force heap to be full using only root object

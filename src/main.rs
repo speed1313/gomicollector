@@ -1,4 +1,4 @@
-use gomicollector::{Heap, Object};
+use gomicollector::Heap;
 
 fn main() {
     let heap_size = 4;
@@ -42,5 +42,11 @@ fn main() {
 
     // ojb1 and obj3 is still in the heap because the root points to it.
     println!("heap: {:#?}", heap);
-    println!("reachable set: {:?}", heap.reachable_set().iter().map(|id| heap.get_data(*id).clone()).collect::<Vec<String>>());
+    println!(
+        "reachable set: {:?}",
+        heap.reachable_set()
+            .iter()
+            .map(|id| heap.get_data(*id).clone())
+            .collect::<Vec<String>>()
+    );
 }
