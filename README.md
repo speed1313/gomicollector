@@ -1,5 +1,5 @@
 <div align="center">
-<img height=150 src= image.jpg alt="logo"></img>
+<img height=150 src= image.png alt="logo"></img>
 </div>
 
 # gomicollector
