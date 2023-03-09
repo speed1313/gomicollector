@@ -1,7 +1,13 @@
+<div align="center">
+<img height=150 src= image.jpg alt="logo"></img>
+</div>
+
 # gomicollector
 ![CI](https://img.shields.io/github/actions/workflow/status/speed1313/gomicollector/rust.yml?branch=main&label=test)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Crates.io](https://img.shields.io/crates/v/gomicollector)](https://crates.io/crates/gomicollector)
+
+
 
 gomicollector is a simple mark-sweep garbage collector in Rust.
 
