@@ -138,7 +138,7 @@ heap: Heap {
 
 
 ## Ref.
-- https://speed1313.notion.site/Garbage-Collection-mark-sweep-b04f5cb763824b8b9cc3735c29fde545
+- https://speed1313.github.io/posts/gomicollector/
 - https://github.com/munificent/mark-sweep
 - https://github.com/jorendorff/gc-in-50-lines
 - ガベージコレクション 自動的メモリ管理を構成する理論と実装, Richard Jones et. al.(著), 前田 敦司 et. al. (訳)
